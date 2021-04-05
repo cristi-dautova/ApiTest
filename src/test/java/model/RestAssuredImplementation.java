@@ -18,41 +18,55 @@ public class RestAssuredImplementation implements BaseRestClient {
     public RestAssuredImplementation() {
         RequestSpecBuilder requestSpecBuilder = new RequestSpecBuilder();
         requestSpecBuilder.setBaseUri(BASE_URL);
-        requestSpecBuilder.setContentType(ContentType.JSON);
         requestSpecBuilder.log(LogDetail.METHOD);
         requestSpecBuilder.log(LogDetail.URI);
         requestSpecification = requestSpecBuilder.build();
     }
 
     @Override
-    public ResponseParameters get(String endPont, String endPointParameter, Map<String, String> parameters) {
+    public <T> ResponseParameters get(String endPont, String endPointParameter, Map<String, String> parameters, T value, Map<String, String> headers) {
         RequestSpecification req = given(requestSpecification);
         for (Map.Entry entry : parameters.entrySet()) {
             req = req.pathParam((String) entry.getKey(), entry.getValue());
         }
+        for (Map.Entry entry : headers.entrySet()) {
+            req = req.header((String) entry.getKey(), entry.getValue());
+        }
         ResponseOptions responseOptions = req.get(endPont + endPointParameter);
+
         return new ResponseParameters(responseOptions);
     }
 
     @Override
-    public <T> ResponseParameters post(String endPoint, T value) {
-        return new ResponseParameters(given(requestSpecification)
+    public <T> ResponseParameters post(String endPoint, T value, Map<String, String> headers) {
+        RequestSpecification req = given(requestSpecification);
+        for (Map.Entry entry : headers.entrySet()) {
+            req = req.header((String) entry.getKey(), entry.getValue());
+        }
+        return new ResponseParameters(req
                 .body(value)
                 .post(endPoint));
     }
 
     @Override
-    public <T> ResponseParameters put(String endPoint, T value) {
-        return new ResponseParameters(given(requestSpecification)
+    public <T> ResponseParameters put(String endPoint, T value, Map<String, String> headers) {
+        RequestSpecification req = given(requestSpecification);
+        for (Map.Entry entry : headers.entrySet()) {
+            req = req.header((String) entry.getKey(), entry.getValue());
+        }
+        return new ResponseParameters(req
                 .body(value)
                 .put(endPoint));
     }
 
     @Override
-    public <T> ResponseParameters delete(String endPont, String endPointParameter, Map<String, String> parameters, T value) {
+    public <T> ResponseParameters delete(String endPont, String endPointParameter, Map<String, String> parameters, T value, Map<String, String> headers) {
         RequestSpecification req = given(requestSpecification);
         for (Map.Entry entry : parameters.entrySet()) {
             req = req.pathParam((String) entry.getKey(), entry.getValue());
+        }
+        for (Map.Entry entry : headers.entrySet()) {
+            req = req.header((String) entry.getKey(), entry.getValue());
         }
         ResponseOptions responseOptions = req.delete(endPont + endPointParameter);
         return new ResponseParameters(responseOptions);

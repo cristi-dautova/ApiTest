@@ -1,6 +1,7 @@
 package model;
 
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -22,36 +23,51 @@ public class RestTemplateImplementation implements BaseRestClient {
     }
 
     @Override
-    public ResponseParameters get(String endPont, String endPointParameter, Map<String, String> parameters) {
+    public <T> ResponseParameters get(String endPont, String endPointParameter, Map<String, String> parameters, T value, Map<String, String> headers) {
         final String uri = BASE_URL + endPont + endPointParameter;
-        int statusCode = restTemplate.getForEntity(uri, String.class, parameters).getStatusCodeValue();
-        return new ResponseParameters(restTemplate.getForObject(uri, String.class, parameters), statusCode, null);
+        HttpHeaders headersRestTemplate = new HttpHeaders();
+        for (Map.Entry entry : headers.entrySet()){
+            headersRestTemplate.set((String) entry.getKey(), (String) entry.getValue());
+        }
+        HttpEntity<T> entity = new HttpEntity<T>(value, headersRestTemplate);
+        ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class, parameters);
+
+        return new ResponseParameters(response);
     }
 
     @Override
-    public <T> ResponseParameters put(String endPoint, T value) {
+    public <T> ResponseParameters put(String endPoint, T value, Map<String, String> headers) {
         final String uri = BASE_URL + endPoint;
-        //restTemplate.put(uri, value);
-        HttpEntity<T> entity = new HttpEntity<T>(value);
+        HttpHeaders headersRestTemplate = new HttpHeaders();
+        for (Map.Entry entry : headers.entrySet()){
+            headersRestTemplate.set((String) entry.getKey(), (String) entry.getValue());
+        }
+        HttpEntity<T> entity = new HttpEntity<T>(value, headersRestTemplate);
         ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.PUT, entity, String.class);
-        return new ResponseParameters(response.getBody(), response.getStatusCodeValue(), null);
+        return new ResponseParameters(response);
     }
 
     @Override
-    public <T> ResponseParameters post(String endPoint, T value) {
+    public <T> ResponseParameters post(String endPoint, T value, Map<String, String> headers) {
         final String uri = BASE_URL + endPoint;
-        //String post = restTemplate.postForObject(uri, value, String.class);
-        HttpEntity<T> entity = new HttpEntity<T>(value);
+        HttpHeaders headersRestTemplate = new HttpHeaders();
+        for (Map.Entry entry : headers.entrySet()){
+            headersRestTemplate.set((String) entry.getKey(), (String) entry.getValue());
+        }
+        HttpEntity<T> entity = new HttpEntity<T>(value, headersRestTemplate);
         ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.POST, entity, String.class);
-        return new ResponseParameters(response.getBody(), response.getStatusCodeValue(), null);
+        return new ResponseParameters(response);
     }
 
     @Override
-    public <T> ResponseParameters delete(String endPoint, String endPointParameter, Map<String, String> parameters, T value) {
+    public <T> ResponseParameters delete(String endPoint, String endPointParameter, Map<String, String> parameters, T value, Map<String, String> headers) {
         final String uri = BASE_URL + endPoint + endPointParameter;
-//        restTemplate.delete(uri, parameters);
-        HttpEntity<T> entity = new HttpEntity<T>(value);
+        HttpHeaders headersRestTemplate = new HttpHeaders();
+        for (Map.Entry entry : headers.entrySet()){
+            headersRestTemplate.set((String) entry.getKey(), (String) entry.getValue());
+        }
+        HttpEntity<T> entity = new HttpEntity<T>(value, headersRestTemplate);
         ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.DELETE, entity, String.class, parameters);
-        return new ResponseParameters(response.getBody(), response.getStatusCodeValue(), null);
+        return new ResponseParameters(response);
     }
 }

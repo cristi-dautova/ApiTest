@@ -1,15 +1,13 @@
 package test;
 
-import entities.Category;
-import entities.Pet;
-import entities.Status;
-import entities.Tag;
+import entities.*;
 import model.BaseRestClient;
 import model.ResponseParameters;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,11 +16,13 @@ import java.util.Random;
 import static utils.PhotoURL.PERSIAN_CAT_PHOTO;
 import static utils.UrlConstants.PET_ENDPOINT;
 import static utils.UrlConstants.PET_ID_ENDPOINT;
+import static utils.Serializer.*;
 
 public abstract class BasePetTests {
 
-    BaseRestClient restClientImplementation;
-    Pet pet;
+    protected BaseRestClient restClientImplementation;
+    protected Pet pet;
+    protected Map<String, String> headers = new HashMap<>();
 
     protected abstract BaseRestClient createBaseRestClient();
 
@@ -42,38 +42,60 @@ public abstract class BasePetTests {
                 Collections.singletonList(PERSIAN_CAT_PHOTO),
                 Collections.singletonList(tag), Status.available);
 
+        headers.put("Accept", "application/json");
+        headers.put("Content-type", "application/json");
+
     }
 
     @Test(priority = 1)
-    public void addPet() {
-        ResponseParameters responseParameters = restClientImplementation.post(PET_ENDPOINT, pet);
+    public void addPet() throws IOException {
+
+        ResponseParameters responseParameters = restClientImplementation.post(PET_ENDPOINT, pet, headers);
+        Pet petFromJson = deserializeJson(responseParameters.getBody(), Pet.class);
         Assert.assertEquals(responseParameters.getStatusCode(), 200);
+        Assert.assertTrue(responseParameters.getHeaders().get("Content-Type").contains("application/json"));
+        Assert.assertEquals(petFromJson.getId(), pet.getId());
+
     }
 
     @Test(priority = 2)
-    public void updatePet() {
-        ResponseParameters responseParameters = restClientImplementation.put(PET_ENDPOINT, pet);
+    public void updatePet() throws IOException {
+
+        ResponseParameters responseParameters = restClientImplementation.put(PET_ENDPOINT, pet, headers);
+        Pet petFromJson = deserializeJson(responseParameters.getBody(), Pet.class);
         Assert.assertEquals(responseParameters.getStatusCode(), 200);
+        Assert.assertTrue(responseParameters.getHeaders().get("Content-Type").contains("application/json"));
+        Assert.assertEquals(petFromJson.getId(), pet.getId());
+
     }
 
     @Test(priority = 3)
-    public void getPetsById() {
+    public void getPetById() throws IOException {
 
         Map<String, String> parameters = new HashMap<>();
         parameters.put("petId", pet.getId());
 
-        ResponseParameters responseParameters = restClientImplementation.get(PET_ENDPOINT, PET_ID_ENDPOINT, parameters);
+        ResponseParameters responseParameters = restClientImplementation.get(PET_ENDPOINT, PET_ID_ENDPOINT, parameters, pet, headers);
+        Pet petFromJson = deserializeJson(responseParameters.getBody(), Pet.class);
+
         Assert.assertEquals(responseParameters.getStatusCode(), 200);
+        Assert.assertTrue(responseParameters.getHeaders().get("Content-Type").contains("application/json"));
+        Assert.assertEquals(petFromJson.getId(), pet.getId());
 
     }
 
     @Test(priority = 4)
-    public void deletePet() {
+    public void deletePet() throws IOException {
 
         Map<String, String> parameters = new HashMap<>();
         parameters.put("petId", pet.getId());
 
-        ResponseParameters responseParameters = restClientImplementation.delete(PET_ENDPOINT, PET_ID_ENDPOINT, parameters, pet);
+        ResponseParameters responseParameters = restClientImplementation.delete(PET_ENDPOINT, PET_ID_ENDPOINT, parameters, pet, headers);
+        DeletedPet deletedPetFromJson = deserializeJson(responseParameters.getBody(), DeletedPet.class);
+
         Assert.assertEquals(responseParameters.getStatusCode(), 200);
+        Assert.assertTrue(responseParameters.getHeaders().get("Content-Type").contains("application/json"));
+        Assert.assertEquals(deletedPetFromJson.message, pet.getId());
+
     }
 }

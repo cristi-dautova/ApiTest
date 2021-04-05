@@ -8,7 +8,7 @@ public class Serializer {
 
     private static ObjectMapper mapper;
 
-    public static <T> Object deserializeJson(String jsonInput, Class<T> clazz) throws IOException {
+    public static <T> T deserializeJson(String jsonInput, Class<T> clazz) throws IOException {
         mapper = new ObjectMapper();
         return mapper.readValue(jsonInput, clazz);
     }
