@@ -49,7 +49,7 @@ public class RestAssuredImplementation implements BaseRestClient {
     }
 
     @Override
-    public ResponseParameters delete(String endPont, String endPointParameter, Map<String, String> parameters) {
+    public <T> ResponseParameters delete(String endPont, String endPointParameter, Map<String, String> parameters, T value) {
         RequestSpecification req = given(requestSpecification);
         for (Map.Entry entry : parameters.entrySet()) {
             req = req.pathParam((String) entry.getKey(), entry.getValue());

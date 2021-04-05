@@ -1,5 +1,8 @@
 package model;
 
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
@@ -21,26 +24,34 @@ public class RestTemplateImplementation implements BaseRestClient {
     @Override
     public ResponseParameters get(String endPont, String endPointParameter, Map<String, String> parameters) {
         final String uri = BASE_URL + endPont + endPointParameter;
-        return new ResponseParameters(restTemplate.getForObject(uri, String.class, parameters), 200, null);
+        int statusCode = restTemplate.getForEntity(uri, String.class, parameters).getStatusCodeValue();
+        return new ResponseParameters(restTemplate.getForObject(uri, String.class, parameters), statusCode, null);
     }
 
     @Override
     public <T> ResponseParameters put(String endPoint, T value) {
         final String uri = BASE_URL + endPoint;
-        restTemplate.put(uri, value);
-        return new ResponseParameters(null, 200, null);
+        //restTemplate.put(uri, value);
+        HttpEntity<T> entity = new HttpEntity<T>(value);
+        ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.PUT, entity, String.class);
+        return new ResponseParameters(response.getBody(), response.getStatusCodeValue(), null);
     }
 
     @Override
     public <T> ResponseParameters post(String endPoint, T value) {
         final String uri = BASE_URL + endPoint;
-        return new ResponseParameters(restTemplate.postForObject(uri, value, String.class), 200, null);
+        //String post = restTemplate.postForObject(uri, value, String.class);
+        HttpEntity<T> entity = new HttpEntity<T>(value);
+        ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.POST, entity, String.class);
+        return new ResponseParameters(response.getBody(), response.getStatusCodeValue(), null);
     }
 
     @Override
-    public ResponseParameters delete(String endPoint, String endPointParameter, Map<String, String> parameters) {
+    public <T> ResponseParameters delete(String endPoint, String endPointParameter, Map<String, String> parameters, T value) {
         final String uri = BASE_URL + endPoint + endPointParameter;
-        restTemplate.delete(uri, parameters);
-        return new ResponseParameters(null, 200, null);
+//        restTemplate.delete(uri, parameters);
+        HttpEntity<T> entity = new HttpEntity<T>(value);
+        ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.DELETE, entity, String.class, parameters);
+        return new ResponseParameters(response.getBody(), response.getStatusCodeValue(), null);
     }
 }

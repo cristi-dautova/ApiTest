@@ -10,5 +10,5 @@ public interface BaseRestClient {
 
     public <T> ResponseParameters post(String endPont, T value);
 
-    public ResponseParameters delete(String endPont, String endPointParameter, Map<String, String> parameters);
+    public <T> ResponseParameters delete(String endPont, String endPointParameter, Map<String, String> parameters, T value);
 }

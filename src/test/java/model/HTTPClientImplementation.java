@@ -33,15 +33,17 @@ public class HTTPClientImplementation implements BaseRestClient {
         get.setHeader("Content-type", "application/json");
 
         String body = null;
+        int statusCode;
 
         try (CloseableHttpClient httpClient = HttpClients.createDefault();
              CloseableHttpResponse response = httpClient.execute(get)) {
             HttpEntity entity = response.getEntity();
+            statusCode = response.getStatusLine().getStatusCode();
             if (entity != null) {
                 body = EntityUtils.toString(entity);
             }
         }
-        return new ResponseParameters(body, 200, get.getAllHeaders());
+        return new ResponseParameters(body, statusCode, get.getAllHeaders());
     }
 
     @SneakyThrows
@@ -57,9 +59,10 @@ public class HTTPClientImplementation implements BaseRestClient {
         put.setHeader("Content-type", "application/json");
         put.setEntity(new StringEntity(objectToJson));
 
+        int statusCode = 0;
         try (CloseableHttpClient httpClient = HttpClients.createDefault();
              CloseableHttpResponse response = httpClient.execute(put)) {
-
+            statusCode = response.getStatusLine().getStatusCode();
             body = EntityUtils.toString(response.getEntity());
         } catch (ClientProtocolException e) {
             e.printStackTrace();
@@ -67,7 +70,7 @@ public class HTTPClientImplementation implements BaseRestClient {
             e.printStackTrace();
         }
 
-        return new ResponseParameters(body, 200, put.getAllHeaders());
+        return new ResponseParameters(body, statusCode, put.getAllHeaders());
     }
 
     @SneakyThrows
@@ -78,7 +81,7 @@ public class HTTPClientImplementation implements BaseRestClient {
 
         String body = "";
         HttpPost post = new HttpPost(BASE_URL + endPont);
-
+        int statusCode = 0;
         post.setHeader("Accept", "application/json");
         post.setHeader("Content-type", "application/json");
 
@@ -86,18 +89,18 @@ public class HTTPClientImplementation implements BaseRestClient {
 
         try (CloseableHttpClient httpClient = HttpClients.createDefault();
              CloseableHttpResponse response = httpClient.execute(post)) {
-
+            statusCode = response.getStatusLine().getStatusCode();
             body = EntityUtils.toString(response.getEntity());
         } catch (ClientProtocolException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return new ResponseParameters(body, 200, post.getAllHeaders());
+        return new ResponseParameters(body, statusCode, post.getAllHeaders());
     }
 
     @Override
-    public ResponseParameters delete(String endPont, String endPointParameter, Map<String, String> parameters) {
+    public <T> ResponseParameters delete(String endPont, String endPointParameter, Map<String, String> parameters, T value) {
 
         String body = "";
         String parameterValue = null;
@@ -105,7 +108,7 @@ public class HTTPClientImplementation implements BaseRestClient {
         for (Map.Entry entry : parameters.entrySet()) {
             parameterValue = (String) entry.getValue();
         }
-
+        int statusCode = 0;
         HttpDelete delete = new HttpDelete(BASE_URL + endPont + "/" + parameterValue);
 
         delete.setHeader("Accept", "application/json");
@@ -113,13 +116,13 @@ public class HTTPClientImplementation implements BaseRestClient {
 
         try (CloseableHttpClient httpClient = HttpClients.createDefault();
              CloseableHttpResponse response = httpClient.execute(delete)) {
-
+            statusCode = response.getStatusLine().getStatusCode();
             body = EntityUtils.toString(response.getEntity());
         } catch (ClientProtocolException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return new ResponseParameters(body, 200, delete.getAllHeaders());
+        return new ResponseParameters(body, statusCode, delete.getAllHeaders());
     }
 }

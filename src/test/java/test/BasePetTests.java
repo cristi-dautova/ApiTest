@@ -6,12 +6,10 @@ import entities.Status;
 import entities.Tag;
 import model.BaseRestClient;
 import model.ResponseParameters;
+import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import org.testng.asserts.SoftAssert;
-import utils.Serializer;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,10 +21,8 @@ import static utils.UrlConstants.PET_ID_ENDPOINT;
 
 public abstract class BasePetTests {
 
-    protected SoftAssert softAssert;
     BaseRestClient restClientImplementation;
     Pet pet;
-    ResponseParameters responseParameters;
 
     protected abstract BaseRestClient createBaseRestClient();
 
@@ -50,22 +46,25 @@ public abstract class BasePetTests {
 
     @Test(priority = 1)
     public void addPet() {
-        restClientImplementation.post(PET_ENDPOINT, pet);
+        ResponseParameters responseParameters = restClientImplementation.post(PET_ENDPOINT, pet);
+        Assert.assertEquals(responseParameters.getStatusCode(), 200);
     }
 
     @Test(priority = 2)
     public void updatePet() {
-        restClientImplementation.put(PET_ENDPOINT, pet);
+        ResponseParameters responseParameters = restClientImplementation.put(PET_ENDPOINT, pet);
+        Assert.assertEquals(responseParameters.getStatusCode(), 200);
     }
 
     @Test(priority = 3)
-    public void getPetsById() throws IOException {
+    public void getPetsById() {
 
         Map<String, String> parameters = new HashMap<>();
         parameters.put("petId", pet.getId());
 
-        ResponseParameters response = restClientImplementation.get(PET_ENDPOINT, PET_ID_ENDPOINT, parameters);
-        Pet pet2 = (Pet) Serializer.deserializeJson(response.getBody(), Pet.class);
+        ResponseParameters responseParameters = restClientImplementation.get(PET_ENDPOINT, PET_ID_ENDPOINT, parameters);
+        Assert.assertEquals(responseParameters.getStatusCode(), 200);
+
     }
 
     @Test(priority = 4)
@@ -74,7 +73,7 @@ public abstract class BasePetTests {
         Map<String, String> parameters = new HashMap<>();
         parameters.put("petId", pet.getId());
 
-        restClientImplementation.delete(PET_ENDPOINT, PET_ID_ENDPOINT, parameters);
+        ResponseParameters responseParameters = restClientImplementation.delete(PET_ENDPOINT, PET_ID_ENDPOINT, parameters, pet);
+        Assert.assertEquals(responseParameters.getStatusCode(), 200);
     }
-
 }

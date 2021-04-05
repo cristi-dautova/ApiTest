@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.apache.http.Header;
 
 @Getter
 @Setter
@@ -15,9 +14,10 @@ public class ResponseParameters {
 
     private String body;
     private int statusCode;
-    private Header[] headers;
+    private Object headers;
 
     public ResponseParameters(ResponseOptions responseOptions) {
         this(responseOptions.getBody().asString(), responseOptions.getStatusCode(), null);
+        //Headers hid = responseOptions.getHeaders();
     }
 }
