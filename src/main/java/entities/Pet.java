@@ -1,24 +1,20 @@
 package entities;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-@Getter
-@Setter
-@ToString()
+@Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class Pet {
     private String id;
     private Category category;
     private String name;
     private List<String> photoUrls;
     private List<Tag> tags;
-    private Status status;
+    private String status;
 
-    public Pet() {
-    }
 }

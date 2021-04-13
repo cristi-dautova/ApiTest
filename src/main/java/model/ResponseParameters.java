@@ -2,21 +2,17 @@ package model;
 
 import io.restassured.http.Header;
 import io.restassured.response.ResponseOptions;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.util.EntityUtils;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.LinkedMultiValueMap;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-@Getter
-@Setter
-@ToString()
+@Data
 @AllArgsConstructor
 public class ResponseParameters {
 

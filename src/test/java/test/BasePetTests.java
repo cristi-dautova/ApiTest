@@ -1,6 +1,9 @@
 package test;
 
-import entities.*;
+import entities.Category;
+import entities.DeletedPet;
+import entities.Pet;
+import entities.Tag;
 import model.BaseRestClient;
 import model.ResponseParameters;
 import org.testng.Assert;
@@ -13,10 +16,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import static utils.PhotoURL.PERSIAN_CAT_PHOTO;
-import static utils.UrlConstants.PET_ENDPOINT;
-import static utils.UrlConstants.PET_ID_ENDPOINT;
-import static utils.Serializer.*;
+import static constants.PhotoURL.PERSIAN_CAT_PHOTO;
+import static constants.UrlConstants.PET_ENDPOINT;
+import static model.HttpMethod.*;
+import static utils.Serializer.deserializeJson;
 
 public abstract class BasePetTests {
 
@@ -40,7 +43,7 @@ public abstract class BasePetTests {
         pet = new Pet(String.valueOf(id),
                 category, "Marsik",
                 Collections.singletonList(PERSIAN_CAT_PHOTO),
-                Collections.singletonList(tag), Status.available);
+                Collections.singletonList(tag), "available");
 
         headers.put("Accept", "application/json");
         headers.put("Content-type", "application/json");
@@ -49,8 +52,7 @@ public abstract class BasePetTests {
 
     @Test(priority = 1)
     public void addPet() throws IOException {
-
-        ResponseParameters responseParameters = restClientImplementation.post(PET_ENDPOINT, pet, headers);
+        ResponseParameters responseParameters = restClientImplementation.executeRequest(POST, PET_ENDPOINT, null, pet, headers, null);
         Pet petFromJson = deserializeJson(responseParameters.getBody(), Pet.class);
         Assert.assertEquals(responseParameters.getStatusCode(), 200);
         Assert.assertTrue(responseParameters.getHeaders().get("Content-Type").contains("application/json"));
@@ -61,7 +63,7 @@ public abstract class BasePetTests {
     @Test(priority = 2)
     public void updatePet() throws IOException {
 
-        ResponseParameters responseParameters = restClientImplementation.put(PET_ENDPOINT, pet, headers);
+        ResponseParameters responseParameters = restClientImplementation.executeRequest(PUT, PET_ENDPOINT, null, pet, headers, null);
         Pet petFromJson = deserializeJson(responseParameters.getBody(), Pet.class);
         Assert.assertEquals(responseParameters.getStatusCode(), 200);
         Assert.assertTrue(responseParameters.getHeaders().get("Content-Type").contains("application/json"));
@@ -75,7 +77,7 @@ public abstract class BasePetTests {
         Map<String, String> parameters = new HashMap<>();
         parameters.put("petId", pet.getId());
 
-        ResponseParameters responseParameters = restClientImplementation.get(PET_ENDPOINT, PET_ID_ENDPOINT, parameters, pet, headers);
+        ResponseParameters responseParameters = restClientImplementation.executeRequest(GET, PET_ENDPOINT, parameters, pet, headers, null);
         Pet petFromJson = deserializeJson(responseParameters.getBody(), Pet.class);
 
         Assert.assertEquals(responseParameters.getStatusCode(), 200);
@@ -90,12 +92,12 @@ public abstract class BasePetTests {
         Map<String, String> parameters = new HashMap<>();
         parameters.put("petId", pet.getId());
 
-        ResponseParameters responseParameters = restClientImplementation.delete(PET_ENDPOINT, PET_ID_ENDPOINT, parameters, pet, headers);
+        ResponseParameters responseParameters = restClientImplementation.executeRequest(DELETE, PET_ENDPOINT, parameters, pet, headers, null);
         DeletedPet deletedPetFromJson = deserializeJson(responseParameters.getBody(), DeletedPet.class);
 
         Assert.assertEquals(responseParameters.getStatusCode(), 200);
         Assert.assertTrue(responseParameters.getHeaders().get("Content-Type").contains("application/json"));
-        Assert.assertEquals(deletedPetFromJson.message, pet.getId());
+        Assert.assertEquals(deletedPetFromJson.getMessage(), pet.getId());
 
     }
 }

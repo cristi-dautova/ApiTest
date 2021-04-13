@@ -1,19 +1,15 @@
 package entities;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Getter
-@Setter
-@ToString()
+@Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class DeletedPet {
     public int code;
     public String type;
     public String message;
 
-    public DeletedPet() {
-    }
 }
