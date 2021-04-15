@@ -1,16 +1,14 @@
 package model;
 
-import lombok.SneakyThrows;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Map;
-
-import static constants.UrlConstants.BASE_URL;
 
 public class RestTemplateImplementation extends BaseRestClient {
 
@@ -23,40 +21,53 @@ public class RestTemplateImplementation extends BaseRestClient {
         return new RestTemplate(factory);
     }
 
-    private <T> HttpEntity<T> buildRequest(T value, Map<String, String> headers) {
+    private String buildURI(String baseURL, Map<String, String> pathParameters, Map<String, String> queryParameters) {
+        UriComponentsBuilder baseURI = UriComponentsBuilder.fromUriString(baseURL);
+        if (pathParameters != null) {
+            for (Map.Entry<String, String> entry : pathParameters.entrySet()) {
+                baseURI.pathSegment(entry.getValue());
+            }
+        }
+        if (queryParameters != null) {
+            for (Map.Entry entry : queryParameters.entrySet()) {
+                baseURI = baseURI.queryParam((String) entry.getKey(), entry.getValue());
+            }
+        }
+        return baseURI.build().toString();
+    }
+
+    @Override
+    public <T> Object buildRequest(model.HttpMethod method, String url, Map<String, String> pathParameters, Map<String, String> queryParameters, Map<String, String> headers, T value) {
+        String uri = buildURI(url, pathParameters, queryParameters);
         HttpHeaders headersRestTemplate = new HttpHeaders();
         for (Map.Entry entry : headers.entrySet()) {
             headersRestTemplate.set((String) entry.getKey(), (String) entry.getValue());
         }
-        return new HttpEntity<T>(value, headersRestTemplate);
+        HttpEntity<T> entity = new HttpEntity<>(value, headersRestTemplate);
+        return new RequestParametersRestTemplate<T>(method, uri, entity);
     }
 
-    @SneakyThrows
     @Override
-    public <T> ResponseParameters executeRequest(model.HttpMethod method, String endPoint, Map<String, String> pathParameters, T value, Map<String, String> headers, Map<String, String> queryParameters) {
+    protected <T> ResponseParameters executeRequest(Object responseObj, Class<T> clazz) {
+        model.HttpMethod httpMethod = ((RequestParametersRestTemplate) responseObj).method;
+        String uri = ((RequestParametersRestTemplate) responseObj).uri;
+        HttpEntity<T> entity = ((RequestParametersRestTemplate) responseObj).entity;
         ResponseEntity<String> response;
-        HttpEntity<T> entity = buildRequest(value, headers);
-        switch (method) {
+        switch (httpMethod) {
             case GET -> {
-                String endPointWithBraces = wrapEndPointPathParameterWithBraces(pathParameters);
-                String uri = BASE_URL + endPoint + endPointWithBraces;
-                response = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class, pathParameters);
+                response = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
             }
             case DELETE -> {
-                String endPointWithBraces = wrapEndPointPathParameterWithBraces(pathParameters);
-                String uri = BASE_URL + endPoint + endPointWithBraces;
-                response = restTemplate.exchange(uri, HttpMethod.DELETE, entity, String.class, pathParameters);
+                response = restTemplate.exchange(uri, HttpMethod.DELETE, entity, String.class);
             }
             case POST -> {
-                String uri = BASE_URL + endPoint;
                 response = restTemplate.exchange(uri, HttpMethod.POST, entity, String.class);
             }
             case PUT -> {
-                String uri = BASE_URL + endPoint;
                 response = restTemplate.exchange(uri, HttpMethod.PUT, entity, String.class);
             }
-            default -> throw new IllegalStateException("Unexpected value: " + method);
+            default -> throw new IllegalStateException("Unexpected value: " + httpMethod);
         }
-        return new ResponseParameters(response);
+        return new ResponseParameters(response, clazz);
     }
 }

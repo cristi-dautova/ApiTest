@@ -1,25 +1,21 @@
 package test;
 
-import entities.Category;
 import entities.DeletedPet;
 import entities.Pet;
-import entities.Tag;
+import lombok.SneakyThrows;
 import model.BaseRestClient;
 import model.ResponseParameters;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Random;
 
 import static constants.PhotoURL.PERSIAN_CAT_PHOTO;
-import static constants.UrlConstants.PET_ENDPOINT;
-import static model.HttpMethod.*;
-import static utils.Serializer.deserializeJson;
+import static constants.UrlConstants.BASE_URL;
+import static utils.TestData.createPet;
 
 public abstract class BasePetTests {
 
@@ -33,71 +29,71 @@ public abstract class BasePetTests {
     public void chooseMethod() {
 
         restClientImplementation = createBaseRestClient();
-
-        Random random = new Random();
-
-        Category category = new Category(1, "Cats");
-        Tag tag = new Tag(1, "Persian cats");
-        int id = random.nextInt(1000);
-        System.out.println(id);
-        pet = new Pet(String.valueOf(id),
-                category, "Marsik",
-                Collections.singletonList(PERSIAN_CAT_PHOTO),
-                Collections.singletonList(tag), "available");
+        pet = createPet("Cats", "Persian cats", "Marsik", PERSIAN_CAT_PHOTO, 1, "available");
 
         headers.put("Accept", "application/json");
         headers.put("Content-type", "application/json");
-
     }
 
     @Test(priority = 1)
-    public void addPet() throws IOException {
-        ResponseParameters responseParameters = restClientImplementation.executeRequest(POST, PET_ENDPOINT, null, pet, headers, null);
-        Pet petFromJson = deserializeJson(responseParameters.getBody(), Pet.class);
+    @SneakyThrows
+    public void addPet() {
+
+        Map<String, String> parameters = new LinkedHashMap<>();
+        parameters.put("version", "v2");
+        parameters.put("animal", "pet");
+
+        ResponseParameters responseParameters = restClientImplementation.post(BASE_URL, parameters, pet, headers, null, Pet.class);
+
         Assert.assertEquals(responseParameters.getStatusCode(), 200);
         Assert.assertTrue(responseParameters.getHeaders().get("Content-Type").contains("application/json"));
-        Assert.assertEquals(petFromJson.getId(), pet.getId());
-
+        Assert.assertEquals(((Pet) responseParameters.getEntity()).getId(), pet.getId());
     }
 
     @Test(priority = 2)
-    public void updatePet() throws IOException {
+    @SneakyThrows
+    public void updatePet() {
 
-        ResponseParameters responseParameters = restClientImplementation.executeRequest(PUT, PET_ENDPOINT, null, pet, headers, null);
-        Pet petFromJson = deserializeJson(responseParameters.getBody(), Pet.class);
+        Map<String, String> parameters = new LinkedHashMap<>();
+        parameters.put("version", "v2");
+        parameters.put("animal", "pet");
+
+        ResponseParameters responseParameters = restClientImplementation.put(BASE_URL, parameters, pet, headers, null, Pet.class);
+
         Assert.assertEquals(responseParameters.getStatusCode(), 200);
         Assert.assertTrue(responseParameters.getHeaders().get("Content-Type").contains("application/json"));
-        Assert.assertEquals(petFromJson.getId(), pet.getId());
-
+        Assert.assertEquals(((Pet) responseParameters.getEntity()).getId(), pet.getId());
     }
 
     @Test(priority = 3)
-    public void getPetById() throws IOException {
+    @SneakyThrows
+    public void getPetById() {
 
-        Map<String, String> parameters = new HashMap<>();
-        parameters.put("petId", pet.getId());
+        Map<String, String> parameters = new LinkedHashMap<>();
+        parameters.put("version", "v2");
+        parameters.put("animal", "pet");
+        parameters.put("{petId}", pet.getId());
 
-        ResponseParameters responseParameters = restClientImplementation.executeRequest(GET, PET_ENDPOINT, parameters, pet, headers, null);
-        Pet petFromJson = deserializeJson(responseParameters.getBody(), Pet.class);
+        ResponseParameters responseParameters = restClientImplementation.get(BASE_URL, parameters, pet, headers, null, Pet.class);
 
         Assert.assertEquals(responseParameters.getStatusCode(), 200);
         Assert.assertTrue(responseParameters.getHeaders().get("Content-Type").contains("application/json"));
-        Assert.assertEquals(petFromJson.getId(), pet.getId());
-
+        Assert.assertEquals(((Pet) responseParameters.getEntity()).getId(), pet.getId());
     }
 
     @Test(priority = 4)
-    public void deletePet() throws IOException {
+    @SneakyThrows
+    public void deletePet() {
 
-        Map<String, String> parameters = new HashMap<>();
-        parameters.put("petId", pet.getId());
+        Map<String, String> parameters = new LinkedHashMap<>();
+        parameters.put("version", "v2");
+        parameters.put("animal", "pet");
+        parameters.put("{petId}", pet.getId());
 
-        ResponseParameters responseParameters = restClientImplementation.executeRequest(DELETE, PET_ENDPOINT, parameters, pet, headers, null);
-        DeletedPet deletedPetFromJson = deserializeJson(responseParameters.getBody(), DeletedPet.class);
+        ResponseParameters responseParameters = restClientImplementation.delete(BASE_URL, parameters, pet, headers, null, DeletedPet.class);
 
         Assert.assertEquals(responseParameters.getStatusCode(), 200);
         Assert.assertTrue(responseParameters.getHeaders().get("Content-Type").contains("application/json"));
-        Assert.assertEquals(deletedPetFromJson.getMessage(), pet.getId());
-
+        Assert.assertEquals(((DeletedPet) responseParameters.getEntity()).getMessage(), pet.getId());
     }
 }

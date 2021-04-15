@@ -9,7 +9,7 @@ import java.util.Random;
 
 public class TestData {
 
-    public Pet createPet(String animal, String breed, String name, String photoUrl, int categoryId, String status) {
+    public static Pet createPet(String animal, String breed, String name, String photoUrl, int categoryId, String status) {
         Random random = new Random();
         Category category = new Category(categoryId, animal);
         Tag tag = new Tag(categoryId, breed);

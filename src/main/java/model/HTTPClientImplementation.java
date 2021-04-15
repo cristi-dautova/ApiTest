@@ -2,41 +2,50 @@ package model;
 
 import lombok.SneakyThrows;
 import org.apache.http.client.methods.*;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
 import java.util.Map;
 
-import static constants.UrlConstants.BASE_URL;
 import static utils.Serializer.serializeEntitiesToJson;
 
 public class HTTPClientImplementation extends BaseRestClient {
 
-    public void buildRequest() {
-
+    @SneakyThrows
+    private String buildURIHttpClient(String baseURL, Map<String, String> pathParameters, Map<String, String> queryParameters) {
+        StringBuilder basePath = new StringBuilder();
+        for (Map.Entry<String, String> entry : pathParameters.entrySet()) {
+            basePath.append("/").append(entry.getValue());
+        }
+        URIBuilder baseURI = new URIBuilder(baseURL);
+        if (pathParameters != null) {
+            baseURI.setPath(basePath.toString());
+        }
+        if (queryParameters != null) {
+            for (Map.Entry<String, String> entry : queryParameters.entrySet()) {
+                baseURI.setParameter(entry.getKey(), entry.getValue());
+            }
+        }
+        return baseURI.build().toString();
     }
 
     @SneakyThrows
     @Override
-    public <T> ResponseParameters executeRequest(HttpMethod method, String endPoint, Map<String, String> pathParameters, T value, Map<String, String> headers, Map<String, String> queryParameters) {
+    protected <T> Object buildRequest(HttpMethod method, String url, Map<String, String> pathParameters, Map<String, String> queryParameters, Map<String, String> headers, T value) {
         HttpUriRequest requestMethod = null;
+        String uri = buildURIHttpClient(url, pathParameters, queryParameters);
         switch (method) {
-            case GET -> {
-                String endPointValue = getEndPointValue(pathParameters);
-                requestMethod = new HttpGet(BASE_URL + endPoint + endPointValue);
-            }
-            case DELETE -> {
-                String endPointValue = getEndPointValue(pathParameters);
-                requestMethod = new HttpDelete(BASE_URL + endPoint + endPointValue);
-            }
+            case GET -> requestMethod = new HttpGet(uri);
+            case DELETE -> requestMethod = new HttpDelete(uri);
             case POST -> {
-                requestMethod = new HttpPost(BASE_URL + endPoint);
+                requestMethod = new HttpPost(uri);
                 String objectToJson = serializeEntitiesToJson(value);
                 ((HttpPost) requestMethod).setEntity(new StringEntity(objectToJson));
             }
             case PUT -> {
-                requestMethod = new HttpPut(BASE_URL + endPoint);
+                requestMethod = new HttpPut(uri);
                 String objectToJson = serializeEntitiesToJson(value);
                 ((HttpPut) requestMethod).setEntity(new StringEntity(objectToJson));
             }
@@ -44,19 +53,16 @@ public class HTTPClientImplementation extends BaseRestClient {
         for (Map.Entry entry : headers.entrySet()) {
             requestMethod.setHeader((String) entry.getKey(), (String) entry.getValue());
         }
-        try (CloseableHttpClient httpClient = HttpClients.createDefault();
-             CloseableHttpResponse response = httpClient.execute(requestMethod)) {
-            return new ResponseParameters(response);
-        }
+        return requestMethod;
     }
 
-    private String getEndPointValue(Map<String, String> pathParameters) {
-        StringBuilder endPointValue = new StringBuilder();
-        if (pathParameters != null) {
-            for (Map.Entry entry : pathParameters.entrySet()) {
-                endPointValue.append("/").append((String) entry.getValue());
-            }
+    @SneakyThrows
+    @Override
+    protected <T> ResponseParameters executeRequest(Object requestObj, Class<T> clazz) {
+        HttpUriRequest request = (HttpUriRequest) requestObj;
+        try (CloseableHttpClient httpClient = HttpClients.createDefault();
+             CloseableHttpResponse closableResponse = httpClient.execute(request)) {
+            return new ResponseParameters(closableResponse, clazz);
         }
-        return endPointValue.toString();
     }
 }
